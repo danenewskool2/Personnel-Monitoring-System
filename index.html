@@ -27,6 +27,7 @@
     
     <div id="addForm">
         <input type="text" id="name" placeholder="Name" required>
+        <input type="date" id="startDate" required>
         <input type="date" id="expDate" required>
         <input type="text" id="remarks" placeholder="Remarks">
         <button onclick="addPersonnel()">Save</button>
@@ -37,6 +38,7 @@
         <thead>
             <tr>
                 <th>Name</th>
+                <th>Starting Date</th>
                 <th>Expiration Date</th>
                 <th>Remarks</th>
                 <th>Actions</th>
@@ -66,6 +68,7 @@
                 
                 row.innerHTML = `
                     <td>${person.name}</td>
+                    <td>${person.startDate}</td>
                     <td>${person.expDate}</td>
                     <td>${person.remarks}</td>
                     <td>
@@ -80,13 +83,14 @@
         
         function addPersonnel() {
             const name = document.getElementById('name').value;
+            const startDate = document.getElementById('startDate').value;
             const expDate = document.getElementById('expDate').value;
             const remarks = document.getElementById('remarks').value;
-            if (name && expDate) {
+            if (name && startDate && expDate) {
                 if (editIndex === -1) {
-                    personnel.push({ name, expDate, remarks });
+                    personnel.push({ name, startDate, expDate, remarks });
                 } else {
-                    personnel[editIndex] = { name, expDate, remarks };
+                    personnel[editIndex] = { name, startDate, expDate, remarks };
                     editIndex = -1;
                 }
                 renderTable();
@@ -98,6 +102,7 @@
         function editPersonnel(index) {
             const person = personnel[index];
             document.getElementById('name').value = person.name;
+            document.getElementById('startDate').value = person.startDate;
             document.getElementById('expDate').value = person.expDate;
             document.getElementById('remarks').value = person.remarks;
             editIndex = index;
@@ -120,6 +125,7 @@
         
         function clearForm() {
             document.getElementById('name').value = '';
+            document.getElementById('startDate').value = '';
             document.getElementById('expDate').value = '';
             document.getElementById('remarks').value = '';
         }
