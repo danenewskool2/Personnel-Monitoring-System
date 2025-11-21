@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personnel Monitoring System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .expired { background-color: #ffcccc; }
+        .expiring-soon { background-color: #ffffcc; }
+        input, button { margin: 5px; padding: 5px; }
+        #search { width: 200px; }
+        #addForm { display: none; margin-bottom: 20px; }
+        .edit-mode { background-color: #e6f7ff; }
+        @media print { body * { visibility: hidden; } #personnelTable, #personnelTable * { visibility: visible; } #personnelTable { position: absolute; left: 0; top: 0; } }
+    </style>
+</head>
+<body>
+    <h1>Personnel Monitoring System</h1>
+    
+    <button onclick="toggleAddForm()">Add Personnel</button>
+    <input type="text" id="search" placeholder="Search by name..." onkeyup="searchTable()">
+    <button onclick="window.print()">Print Table</button>
+    
+    <div id="addForm">
+        <input type="text" id="name" placeholder="Name" required>
+        <input type="date" id="expDate" required>
+        <input type="text" id="remarks" placeholder="Remarks">
+        <button onclick="addPersonnel()">Save</button>
+        <button onclick="toggleAddForm()">Cancel</button>
+    </div>
+    
+    <table id="personnelTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Expiration Date</th>
+                <th>Remarks</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Rows will be populated here -->
+        </tbody>
+    </table>
+    
+    <script>
+        let personnel = JSON.parse(localStorage.getItem('personnel')) || [];
+        let editIndex = -1;
+        
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            personnel.forEach((person, index) => {
+                const row = document.createElement('tr');
+                const expDate = new Date(person.expDate);
+                const today = new Date();
+                const diffTime = expDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays < 0) row.classList.add('expired');
+                else if (diffDays <= 7) row.classList.add('expiring-soon');
+                
+                row.innerHTML = `
+                    <td>${person.name}</td>
+                    <td>${person.expDate}</td>
+                    <td>${person.remarks}</td>
+                    <td>
+                        <button onclick="editPersonnel(${index})">Edit</button>
+                        <button onclick="deletePersonnel(${index})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            localStorage.setItem('personnel', JSON.stringify(personnel));
+        }
+        
+        function addPersonnel() {
+            const name = document.getElementById('name').value;
+            const expDate = document.getElementById('expDate').value;
+            const remarks = document.getElementById('remarks').value;
+            if (name && expDate) {
+                if (editIndex === -1) {
+                    personnel.push({ name, expDate, remarks });
+                } else {
+                    personnel[editIndex] = { name, expDate, remarks };
+                    editIndex = -1;
+                }
+                renderTable();
+                toggleAddForm();
+                clearForm();
+            }
+        }
+        
+        function editPersonnel(index) {
+            const person = personnel[index];
+            document.getElementById('name').value = person.name;
+            document.getElementById('expDate').value = person.expDate;
+            document.getElementById('remarks').value = person.remarks;
+            editIndex = index;
+            toggleAddForm();
+        }
+        
+        function deletePersonnel(index) {
+            personnel.splice(index, 1);
+            renderTable();
+        }
+        
+        function toggleAddForm() {
+            const form = document.getElementById('addForm');
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+            if (form.style.display === 'none') {
+                clearForm();
+                editIndex = -1;
+            }
+        }
+        
+        function clearForm() {
+            document.getElementById('name').value = '';
+            document.getElementById('expDate').value = '';
+            document.getElementById('remarks').value = '';
+        }
+        
+        function searchTable() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach(row => {
+                const name = row.cells[0].textContent.toLowerCase();
+                row.style.display = name.includes(query) ? '' : 'none';
+            });
+        }
+        
+        renderTable();
+    </script>
+</body>
+</html>
